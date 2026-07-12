@@ -28,8 +28,8 @@ FAST-LIO2 是一种**紧耦合迭代卡尔曼滤波器 LiDAR-惯性里程计**�
 
 | 依赖 | 版本要求 |
 |------|----------|
-| Ubuntu | >= 20.04 |
-| ROS2 | >= Foxy（推荐 Humble） |
+| Ubuntu |  22.04 |
+| ROS2 | Humble |
 | PCL | >= 1.8 |
 | Eigen | >= 3.3.4 |
 | [livox_ros_driver2](https://github.com/Livox-SDK/livox_ros_driver2) | 最新（必装） |
