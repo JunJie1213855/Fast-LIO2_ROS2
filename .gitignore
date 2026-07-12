@@ -1,0 +1,45 @@
+# ROS2 Build Artifacts
+build/
+install/
+log/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# PCD Point Cloud Files
+PCD/*.pcd
+*.pcd
+
+# Debug Logs
+Log/
+Log/*.txt
+Log/*.csv
+Log/*.png
+Log/*.pdf
+Log/*.mat
+
+# Documentation (generated)
+doc/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# GitHub
+.github/
+
+# Core dumps
+core
+*.core
+
+# Colcon workspace symlinks
+src/

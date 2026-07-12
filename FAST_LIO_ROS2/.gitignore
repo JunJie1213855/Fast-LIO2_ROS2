@@ -1,0 +1,15 @@
+.vscode
+build
+install
+log
+.github
+build
+Log/*.png
+Log/*.txt
+Log/*.csv
+Log/*.pdf
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+PCD/*.pcd
+doc
+Log
