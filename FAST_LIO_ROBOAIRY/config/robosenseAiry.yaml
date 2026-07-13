@@ -15,7 +15,7 @@
       lidar_type: 5  # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR, 5 for RoboSense Airy
       scan_line: 96
       timestamp_unit: 0  # 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
-      blind: 0.01
+      blind: 1.0 # blind area for 1m 
     mapping:
       save_voxel_size: 0.2   # 保存时体素降采样，独立于 filter_size_map
       max_search_dist_surf: 1.0  # default: 5
