@@ -72,16 +72,7 @@ def generate_launch_description():
     ld.add_action(declare_rviz_config_path_cmd)
     ld.add_action(declare_map_file_path_cmd)
 
-    # Static TF: flip camera_init 180° around Z to make Z point upward in RViz
-    tf_upright_node = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['--roll-pitch-yaw', '0', '0', '3.14159', 'camera_init', 'camera_init_upright'],
-        output='screen'
-    )
-
     ld.add_action(fast_lio_node)
-    ld.add_action(tf_upright_node)
     ld.add_action(rviz_node)
 
     return ld
