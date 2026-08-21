@@ -11,7 +11,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    package_path = get_package_share_directory('fast_lio')
+    package_path = get_package_share_directory('fast_lio_robosense')
     default_config_path = os.path.join(package_path, 'config')
     default_rviz_config_path = os.path.join(
         package_path, 'rviz', 'fastlio.rviz')
@@ -31,7 +31,7 @@ def generate_launch_description():
         description='Yaml config file path'
     )
     decalre_config_file_cmd = DeclareLaunchArgument(
-        'config_file', default_value='mid360.yaml',
+        'config_file', default_value='avia.yaml',
         description='Config file'
     )
     declare_rviz_cmd = DeclareLaunchArgument(
@@ -44,7 +44,7 @@ def generate_launch_description():
     )
 
     fast_lio_node = Node(
-        package='fast_lio',
+        package='fast_lio_robosense',
         executable='fastlio_mapping',
         parameters=[PathJoinSubstitution([config_path, config_file]),
                     {'use_sim_time': use_sim_time}],
