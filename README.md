@@ -1,4 +1,4 @@
-# FAST-LIO2 ROS2 建图（`fast_lio_robosense` 包）
+# FAST-LIO2 ROS2 建图
 
 基于 [FAST-LIO2](https://github.com/hku-mars/FAST_LIO) 的 ROS2 Humble 建图节点，兼容 **Livox、Velodyne、Ouster、RoboSense Airy** 等多种激光雷达。
 
