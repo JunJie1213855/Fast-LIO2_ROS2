@@ -397,23 +397,25 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
     pos_imu<<VEC_FROM_ARRAY(head->pos);
     acc_imu<<VEC_FROM_ARRAY(tail->acc);
     angvel_avr<<VEC_FROM_ARRAY(tail->gyr);
-    // // 遍历在该 IMU 时间区间内的所有激光点
+    // 遍历在该 IMU 时间区间内的所有激光点
     for(; it_pcl->curvature / double(1000) > head->offset_time; it_pcl --)
     {
+      // 1. 计算点相对于 IMU 时间点的时间差 dt (curvature 里存的是毫秒级的 offset_time)
       dt = it_pcl->curvature / double(1000) - head->offset_time;
 
       /* Transform to the 'end' frame, using only the rotation
        * Note: Compensation direction is INVERSE of Frame's moving direction
        * So if we want to compensate a point at timestamp-i to the frame-e
        * P_compensate = R_imu_e ^ T * (R_i * P_i + T_ei) where T_ei is represented in global frame */
+      // 2. 根据内插公式计算该激光点采样时刻 $i$ 的姿态 R_i 和平移 T_ei
       M3D R_i(R_imu * Exp(angvel_avr, dt));
       
       V3D P_i(it_pcl->x, it_pcl->y, it_pcl->z);
       V3D T_ei(pos_imu + vel_imu * dt + 0.5 * acc_imu * dt * dt - imu_state.pos);
-      // P_com = R_I_L(R_Ik_)
+      // 3. 将采样点坐标通过“外参”和“相对位姿”变换投影到【帧末坐标系】
       V3D P_compensate = imu_state.offset_R_L_I.conjugate() * (imu_state.rot.conjugate() * (R_i * (imu_state.offset_R_L_I * P_i + imu_state.offset_T_L_I) + T_ei) - imu_state.offset_T_L_I);// not accurate!
       
-      // 保存他们的去畸变后的三维点以及旋转
+      // 4. 用去畸变后的真实三维坐标覆盖原始坐标
       it_pcl->x = P_compensate(0);
       it_pcl->y = P_compensate(1);
       it_pcl->z = P_compensate(2);
