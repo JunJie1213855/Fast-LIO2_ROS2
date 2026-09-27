@@ -1120,6 +1120,7 @@ private:
             svd_time = 0;
             t0 = omp_get_wtime();
 
+            // 处理 IMU 测量数据，并且前向传播 + 点云反向传播去畸变
             p_imu->Process(Measures, kf, feats_undistort);
             state_point = kf.get_x();
             pos_lid = state_point.pos + state_point.rot * state_point.offset_T_L_I;
