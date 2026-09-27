@@ -1122,7 +1122,10 @@ private:
 
             // 处理 IMU 测量数据，并且前向传播 + 点云反向传播去畸变
             p_imu->Process(Measures, kf, feats_undistort);
+            // 获取传播后的状态
             state_point = kf.get_x();
+
+            // 
             pos_lid = state_point.pos + state_point.rot * state_point.offset_T_L_I;
 
             if (feats_undistort->empty() || (feats_undistort == NULL))
@@ -1133,9 +1136,12 @@ private:
 
             flg_EKF_inited = (Measures.lidar_beg_time - first_lidar_time) < INIT_TIME ? false : true;
             /*** Segment the map in lidar FOV ***/
+
+            // FOV 限定设置，把非限定 FOV 的点云去除
             lasermap_fov_segment();
 
             /*** downsample the feature points in a scan ***/
+            // 体素滤波降采样
             downSizeFilterSurf.setInputCloud(feats_undistort);
             downSizeFilterSurf.filter(*feats_down_body);
 
@@ -1144,6 +1150,7 @@ private:
             t1 = omp_get_wtime();
             feats_down_size = feats_down_body->points.size();
             /*** initialize the map kdtree ***/
+            // 初始化 ikd-tree 地图
             if (ikdtree.Root_Node == nullptr)
             {
                 RCLCPP_INFO(rclcpp::get_logger("laser_mapping"), CLR_GRN "Initialize the map kdtree" CLR_RST);
