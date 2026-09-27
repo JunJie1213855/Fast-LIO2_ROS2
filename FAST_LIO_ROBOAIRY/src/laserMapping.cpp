@@ -149,8 +149,8 @@ shared_ptr<Preprocess> p_pre(new Preprocess());
 shared_ptr<ImuProcess> p_imu(new ImuProcess());
 
 /*
-* pub and save dense world point cloud
-*/
+ * pub and save dense world point cloud
+ */
 
 PointCloudXYZI::Ptr pcl_wait_pub(new PointCloudXYZI());
 PointCloudXYZI::Ptr pcl_wait_save(new PointCloudXYZI());
@@ -556,7 +556,6 @@ void map_incremental()
     kdtree_incremental_time = omp_get_wtime() - st_time;
 }
 
-
 void publish_frame_world(rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudFull)
 {
     if (scan_pub_en)
@@ -913,6 +912,7 @@ class LaserMappingNode : public rclcpp::Node
 public:
     LaserMappingNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions()) : Node("laser_mapping", options)
     {
+        // 参数声明
         this->declare_parameter<bool>("publish.path_en", true);
         this->declare_parameter<bool>("publish.effect_map_en", false);
         this->declare_parameter<bool>("publish.map_en", false);
@@ -951,6 +951,7 @@ public:
         this->declare_parameter<vector<double>>("mapping.extrinsic_R", vector<double>());
         this->declare_parameter<vector<double>>("mapping.gravity_ref", vector<double>({0.0, 0.0, -9.81}));
 
+        // 参数获取
         this->get_parameter_or<bool>("publish.path_en", path_en, true);
         this->get_parameter_or<bool>("publish.effect_map_en", effect_pub_en, false);
         this->get_parameter_or<bool>("publish.map_en", map_pub_en, false);
@@ -990,6 +991,7 @@ public:
         this->get_parameter_or<vector<double>>("mapping.extrinsic_R", extrinR, vector<double>());
         this->get_parameter_or<vector<double>>("mapping.gravity_ref", gravity_ref, vector<double>({0.0, 0.0, -9.81}));
 
+        // 日志打印
         RCLCPP_INFO(rclcpp::get_logger("laser_mapping"), "p_pre->lidar_type %d", p_pre->lidar_type);
         RCLCPP_INFO(rclcpp::get_logger("laser_mapping"), "is save : %d", pcd_save_en);
         RCLCPP_INFO(rclcpp::get_logger("laser_mapping"), "map_file_path  : %s", map_file_path.c_str());
@@ -1001,11 +1003,13 @@ public:
         // double deltaT, deltaR, aver_time_consu = 0, aver_time_icp = 0, aver_time_match = 0, aver_time_incre = 0, aver_time_solve = 0, aver_time_const_H_time = 0;
         // bool flg_EKF_converged, EKF_stop_flg = 0;
 
+        // FOV 设置
         FOV_DEG = (fov_deg + 10.0) > 179.9 ? 179.9 : (fov_deg + 10.0);
         HALF_FOV_COS = cos((FOV_DEG) * 0.5 * PI_M / 180.0);
 
         _featsArray.reset(new PointCloudXYZI());
 
+        // 体素降采样
         memset(point_selected_surf, true, sizeof(point_selected_surf));
         memset(res_last, -1000.0f, sizeof(res_last));
         downSizeFilterSurf.setLeafSize(filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
@@ -1013,17 +1017,22 @@ public:
         memset(point_selected_surf, true, sizeof(point_selected_surf));
         memset(res_last, -1000.0f, sizeof(res_last));
 
+        // Lidar2IMU 外参读取
         Lidar_T_wrt_IMU << VEC_FROM_ARRAY(extrinT);
         Lidar_R_wrt_IMU << MAT_FROM_ARRAY(extrinR);
         p_imu->set_extrinsic(Lidar_T_wrt_IMU, Lidar_R_wrt_IMU);
+
+        // 重力向量参数
         V3D gravity_ref_v;
         gravity_ref_v << VEC_FROM_ARRAY(gravity_ref);
+        // 设置 imu 基础参数，重力向量、旋转协方差、加速度协方差、零偏协方差
         p_imu->set_gravity_ref(gravity_ref_v);
         p_imu->set_gyr_cov(V3D(gyr_cov, gyr_cov, gyr_cov));
         p_imu->set_acc_cov(V3D(acc_cov, acc_cov, acc_cov));
         p_imu->set_gyr_bias_cov(V3D(b_gyr_cov, b_gyr_cov, b_gyr_cov));
         p_imu->set_acc_bias_cov(V3D(b_acc_cov, b_acc_cov, b_acc_cov));
 
+        // 这里初始化 IESKF 的状态转移函数 f(x)、误差状态转移矩阵 df/dx、噪声状态转移矩阵 df/dw、观测函数 h(x)，最大迭代次数，迭代阈值
         fill(epsi, epsi + 23, 0.001);
         kf.init_dyn_share(get_f, df_dx, df_dw, h_share_model, NUM_MAX_ITERATIONS, epsi);
 
@@ -1042,6 +1051,7 @@ public:
             RCLCPP_ERROR(rclcpp::get_logger("laser_mapping"), "Log directory doesn't exist: %s", ROOT_DIR);
 
         /*** ROS subscribe initialization ***/
+        // lidar 数据订阅
         if (p_pre->lidar_type == AVIA)
         {
             sub_pcl_livox_ = this->create_subscription<livox_ros_driver2::msg::CustomMsg>(lid_topic, 20, livox_pcl_cbk);
@@ -1050,7 +1060,9 @@ public:
         {
             sub_pcl_pc_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(lid_topic, rclcpp::SensorDataQoS(), standard_pcl_cbk);
         }
+        // imu 数据订阅
         sub_imu_ = this->create_subscription<sensor_msgs::msg::Imu>(imu_topic, 10, imu_cbk);
+        // 发布者初始化
         pubLaserCloudFull_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered", 20);
         pubLaserCloudFull_body_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered_body", 20);
         pubLaserCloudEffect_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_effected", 20);
@@ -1064,11 +1076,15 @@ public:
         p_imu->set_node_handler(pubImuOdom_);
 
         //------------------------------------------------------------------------------------------------------
-        auto period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0 / 100.0));
+        auto period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0 / 100.0)); // 10 Hz 处理定时器
+        // 定时器 =》 主要处理函数 ！！！！
         timer_ = rclcpp::create_timer(this, this->get_clock(), period_ms, std::bind(&LaserMappingNode::timer_callback, this));
 
-        auto map_period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0));
+        auto map_period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0)); // 1Hz 地图发布
+        // 地图发布定时器
         map_pub_timer_ = rclcpp::create_timer(this, this->get_clock(), map_period_ms, std::bind(&LaserMappingNode::map_publish_callback, this));
+
+        // 地图保存服务
         map_save_srv_ = this->create_service<std_srvs::srv::Trigger>("map_save", std::bind(&LaserMappingNode::map_save_callback, this, std::placeholders::_1, std::placeholders::_2));
 
         RCLCPP_INFO(rclcpp::get_logger("laser_mapping"), CLR_GRN "Node init finished." CLR_RST);
@@ -1084,7 +1100,8 @@ public:
 private:
     void timer_callback()
     {
-        if (sync_packages(Measures))
+        // lidar 和 imu 数据的同步读取
+        if (sync_packages(Measures)) 
         {
             if (flg_first_scan)
             {
@@ -1303,6 +1320,7 @@ int main(int argc, char **argv)
 
     signal(SIGINT, SigHandle);
 
+    // 主节点，是并发不是并行
     rclcpp::spin(std::make_shared<LaserMappingNode>());
 
     if (rclcpp::ok())
